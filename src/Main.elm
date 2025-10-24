@@ -1,8 +1,9 @@
 module Main exposing (Model, Msg(..), init, main, update, view)
 
 import Browser
-import Html exposing (Html, button, div, text)
-import Html.Events exposing (onClick)
+import Html exposing (Html, button, div, h1, input, li, text, ul)
+import Html.Attributes exposing (value)
+import Html.Events exposing (onClick, onInput)
 
 
 
@@ -18,7 +19,9 @@ main =
 
 
 type alias ConfigModel =
-    { playerNames : List String }
+    { playerNames : List String
+    , totalRounds : Int
+    }
 
 
 type Page
@@ -32,7 +35,7 @@ type alias Model =
 
 init : Model
 init =
-    ConfigPage { playerNames = [ "", "" ] }
+    ConfigPage { playerNames = [ "", "" ], totalRounds = 15 }
 
 
 
@@ -41,13 +44,57 @@ init =
 
 type Msg
     = StartGame
+    | AddPlayer
+    | PlayerNameChange Int String
+
+
+updateElement : List a -> Int -> a -> List a
+updateElement list index to =
+    let
+        updateElementInternal i curr =
+            if i == index then
+                to
+
+            else
+                curr
+    in
+    List.indexedMap updateElementInternal list
 
 
 update : Msg -> Model -> Model
-update msg _ =
+update msg model =
     case msg of
+        -- Config Page
         StartGame ->
             GamePage
+
+        PlayerNameChange index newName ->
+            case model of
+                ConfigPage configModel ->
+                    let
+                        nextPlayerNames =
+                            updateElement configModel.playerNames index newName
+
+                        nextModel =
+                            { configModel | playerNames = nextPlayerNames }
+                    in
+                    ConfigPage nextModel
+
+                GamePage ->
+                    model
+
+        AddPlayer ->
+            case model of
+                ConfigPage configModel ->
+                    let
+                        nextModel =
+                            -- Add new player to the end
+                            { configModel | playerNames = List.append configModel.playerNames [ "" ] }
+                    in
+                    ConfigPage nextModel
+
+                GamePage ->
+                    model
 
 
 
@@ -57,8 +104,32 @@ update msg _ =
 view : Model -> Html Msg
 view model =
     case model of
-        ConfigPage _ ->
-            div [] [ text "Config", button [ onClick StartGame ] [ text "Start Game" ] ]
+        ConfigPage configModel ->
+            viewConfigPage configModel
 
         GamePage ->
             div [] [ text "Game" ]
+
+
+viewConfigPage : ConfigModel -> Html Msg
+viewConfigPage model =
+    div []
+        [ h1 [] [ text "Config" ]
+        , viewPlayers model.playerNames
+        , button [ onClick AddPlayer ] [ text "+ Add Another" ]
+        , button [ onClick StartGame ] [ text "Start Game" ]
+        ]
+
+
+viewPlayers : List String -> Html Msg
+viewPlayers playerNames =
+    ul []
+        (List.indexedMap
+            (\i name -> li [] [ viewPlayerTextBox i name ])
+            playerNames
+        )
+
+
+viewPlayerTextBox : Int -> String -> Html Msg
+viewPlayerTextBox playerIndex playerName =
+    input [ value playerName, onInput (PlayerNameChange playerIndex) ] []
