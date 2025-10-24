@@ -17,13 +17,22 @@ main =
 -- MODEL
 
 
+type alias ConfigModel =
+    { playerNames : List String }
+
+
+type Page
+    = ConfigPage ConfigModel
+    | GamePage
+
+
 type alias Model =
-    Int
+    Page
 
 
 init : Model
 init =
-    0
+    ConfigPage { playerNames = [ "", "" ] }
 
 
 
@@ -31,18 +40,14 @@ init =
 
 
 type Msg
-    = Increment
-    | Decrement
+    = StartGame
 
 
 update : Msg -> Model -> Model
-update msg model =
+update msg _ =
     case msg of
-        Increment ->
-            model + 1
-
-        Decrement ->
-            model - 1
+        StartGame ->
+            GamePage
 
 
 
@@ -51,8 +56,9 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
-    div []
-        [ button [ onClick Decrement ] [ text "-" ]
-        , div [] [ text (String.fromInt model) ]
-        , button [ onClick Increment ] [ text "+" ]
-        ]
+    case model of
+        ConfigPage _ ->
+            div [] [ text "Config", button [ onClick StartGame ] [ text "Start Game" ] ]
+
+        GamePage ->
+            div [] [ text "Game" ]
