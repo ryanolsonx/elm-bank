@@ -10,6 +10,7 @@ import Html.Events exposing (onClick, onInput)
 -- MAIN
 
 
+main : Program () Model Msg
 main =
     Browser.sandbox { init = init, update = update, view = view }
 
@@ -24,9 +25,25 @@ type alias ConfigModel =
     }
 
 
+type alias Player =
+    { name : String }
+
+
+type alias Round =
+    { turns : Int }
+
+
+type alias GameModel =
+    { previousRounds : List Round
+    , currentRound : Maybe Round
+    , nextRounds : List Round
+    , players : List Player
+    }
+
+
 type Page
     = ConfigPage ConfigModel
-    | GamePage
+    | GamePage GameModel
 
 
 type alias Model =
@@ -36,6 +53,16 @@ type alias Model =
 init : Model
 init =
     ConfigPage { playerNames = [ "", "" ], totalRounds = 15 }
+
+
+initRound : Round
+initRound =
+    { turns = 0 }
+
+
+initPlayer : String -> Player
+initPlayer name =
+    { name = name }
 
 
 
@@ -66,7 +93,24 @@ update msg model =
     case msg of
         -- Config Page
         StartGame ->
-            GamePage
+            case model of
+                ConfigPage configModel ->
+                    let
+                        nextRounds =
+                            List.map (\_ -> initRound) (List.range 0 (configModel.totalRounds - 1))
+
+                        players =
+                            List.map initPlayer configModel.playerNames
+                    in
+                    GamePage
+                        { previousRounds = []
+                        , currentRound = Just initRound
+                        , nextRounds = nextRounds
+                        , players = players
+                        }
+
+                GamePage _ ->
+                    model
 
         PlayerNameChange index newName ->
             case model of
@@ -80,7 +124,7 @@ update msg model =
                     in
                     ConfigPage nextModel
 
-                GamePage ->
+                GamePage _ ->
                     model
 
         AddPlayer ->
@@ -93,7 +137,7 @@ update msg model =
                     in
                     ConfigPage nextModel
 
-                GamePage ->
+                GamePage _ ->
                     model
 
 
@@ -107,8 +151,8 @@ view model =
         ConfigPage configModel ->
             viewConfigPage configModel
 
-        GamePage ->
-            div [] [ text "Game" ]
+        GamePage gameModel ->
+            viewGamePage gameModel
 
 
 viewConfigPage : ConfigModel -> Html Msg
@@ -133,3 +177,15 @@ viewPlayers playerNames =
 viewPlayerTextBox : Int -> String -> Html Msg
 viewPlayerTextBox playerIndex playerName =
     input [ value playerName, onInput (PlayerNameChange playerIndex) ] []
+
+
+
+-- GAME
+
+
+viewGamePage : GameModel -> Html Msg
+viewGamePage model =
+    div []
+        [ h1 [] [ text "Game" ]
+        , viewPlayers (List.map (\player -> player.name) model.players)
+        ]
