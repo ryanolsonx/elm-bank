@@ -99,8 +99,10 @@ update msg model =
                         nextRounds =
                             List.map (\_ -> initRound) (List.range 0 (configModel.totalRounds - 1))
 
+                        playersWithName = List.filter (\n -> n /= "") configModel.playerNames
+
                         players =
-                            List.map initPlayer configModel.playerNames
+                            List.map initPlayer playersWithName
                     in
                     GamePage
                         { previousRounds = []
@@ -159,14 +161,14 @@ viewConfigPage : ConfigModel -> Html Msg
 viewConfigPage model =
     div []
         [ h1 [] [ text "Config" ]
-        , viewPlayers model.playerNames
+        , viewConfigPlayers model.playerNames
         , button [ onClick AddPlayer ] [ text "+ Add Another" ]
         , button [ onClick StartGame ] [ text "Start Game" ]
         ]
 
 
-viewPlayers : List String -> Html Msg
-viewPlayers playerNames =
+viewConfigPlayers : List String -> Html Msg
+viewConfigPlayers playerNames =
     ul []
         (List.indexedMap
             (\i name -> li [] [ viewPlayerTextBox i name ])
@@ -187,5 +189,10 @@ viewGamePage : GameModel -> Html Msg
 viewGamePage model =
     div []
         [ h1 [] [ text "Game" ]
-        , viewPlayers (List.map (\player -> player.name) model.players)
+        , viewPlayers model
         ]
+
+viewPlayers : GameModel -> Html Msg
+viewPlayers model =
+    ul []
+        (List.map (\player -> li [] [ text player.name]) model.players)
