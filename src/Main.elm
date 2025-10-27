@@ -99,7 +99,8 @@ update msg model =
                         nextRounds =
                             List.map (\_ -> initRound) (List.range 0 (configModel.totalRounds - 1))
 
-                        playersWithName = List.filter (\n -> n /= "") configModel.playerNames
+                        playersWithName =
+                            List.filter (\n -> n /= "") configModel.playerNames
 
                         players =
                             List.map initPlayer playersWithName
@@ -192,7 +193,8 @@ viewGamePage model =
         , viewPlayers model
         ]
 
+
 viewPlayers : GameModel -> Html Msg
 viewPlayers model =
     ul []
-        (List.map (\player -> li [] [ text player.name]) model.players)
+        (List.map (\player -> li [] [ text player.name ]) model.players)
